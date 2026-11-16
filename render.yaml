@@ -1,0 +1,20 @@
+services:
+  - type: web
+    name: taskflow-demo-siva
+    runtime: docker
+    plan: free
+    region: singapore
+    dockerfilePath: ./Dockerfile
+    dockerContext: .
+    healthCheckPath: /api/health
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: JWT_SECRET
+        generateValue: true
+      - key: JWT_EXPIRES_IN
+        value: 7d
+      - key: DATABASE_FILE
+        value: /tmp/taskflow.db
+      - key: COOKIE_SECURE
+        value: "true"

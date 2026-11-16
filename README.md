@@ -20,7 +20,7 @@ production Docker image for same-origin deployment.
 | Dashboard metrics, completion charts, priority distribution | ✅ |
 | Calendar, task views, analytics, settings | ✅ |
 | Automated frontend and backend test suites | ⏳ |
-| Production deployment configuration | ✅ Railway / Docker |
+| Production deployment configuration | ✅ Render / Docker |
 
 ## Tech stack
 
@@ -127,34 +127,25 @@ npm run build
 
 Production output is written to `client/dist/`.
 
-## Deploy to Railway
+## Deploy a free demo to Render
 
 The root `Dockerfile` builds the React client and serves it from Express alongside
-the API. This keeps requests and the HttpOnly session cookie same-origin.
+the API. `render.yaml` configures one same-origin Render web service and generates
+a JWT secret automatically.
 
-1. Create a Railway project and deploy the `srA12-png/Taskflow` GitHub repository.
-   Railway detects the root `Dockerfile` automatically.
-2. Attach a persistent volume to the service, mounted at `/data`.
-3. Generate a public domain for the service, then set these service variables:
+1. In the Render Dashboard, create a **Blueprint** from the
+   `srA12-png/Taskflow` GitHub repository.
+2. Review and deploy the `taskflow-demo-siva` free web service from `render.yaml`.
+   Render builds the root `Dockerfile` and assigns the service an HTTPS URL.
+3. Open `https://<your-service>.onrender.com/api/health` and confirm it reports
+   `status: "ok"`, then register an account and try the app.
 
-   | Variable | Value |
-   | --- | --- |
-   | `NODE_ENV` | `production` |
-   | `JWT_SECRET` | A unique random secret of at least 32 random bytes |
-   | `JWT_EXPIRES_IN` | `7d` |
-   | `DATABASE_FILE` | `/data/taskflow.db` |
-   | `COOKIE_SECURE` | `true` |
-   | `CLIENT_ORIGIN` | The exact HTTPS origin Railway assigned to the service |
-
-   Railway supplies `PORT` automatically; do not set it to a fixed value.
-4. Redeploy after setting the variables. Open
-   `https://<your-domain>/api/health`, confirm it reports `status: "ok"`, and
-   register an account in the app.
-
-The persistent volume is required because the container filesystem is replaced
-on redeploy. Without it, SQLite data is lost. Never use the development JWT
-secret in production. The optional demo seed is intended for local development,
-not public production deployments.
+**Demo limitation:** Render's free web services use an ephemeral filesystem and
+spin down when idle. This demo stores SQLite at `/tmp/taskflow.db`, so accounts
+and tasks can be lost when the service restarts, spins down, or redeploys. Free
+services cannot attach persistent disks. Do not rely on this deployment for
+important or production data; use a paid service with a persistent disk or move
+the database to durable managed storage for that use case.
 
 ## Remaining work
 

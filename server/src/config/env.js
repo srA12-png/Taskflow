@@ -29,7 +29,11 @@ export const config = {
   isTest: nodeEnv === "test",
   serverRoot,
   port: Number(process.env.PORT) || 5000,
-  clientOrigins: (process.env.CLIENT_ORIGIN ?? "http://localhost:5173")
+  clientOrigins: (
+    process.env.CLIENT_ORIGIN ??
+    process.env.RENDER_EXTERNAL_URL ??
+    "http://localhost:5173"
+  )
     .split(",")
     .map((origin) => origin.trim())
     .filter(Boolean),
