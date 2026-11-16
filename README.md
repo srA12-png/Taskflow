@@ -1,29 +1,26 @@
 # TaskFlow — Smart Task & Productivity Management System
 
 TaskFlow is a full-stack task manager built with React (Vite), Express and SQLite.
-It is being built in verifiable phases: the UI shell ships first, then authentication,
-the REST API, task management, analytics and finally tests/documentation.
+It includes authentication, task and category management, analytics, and a
+production Docker image for same-origin deployment.
 
-> **Current status: Phase 1 complete — UI shell only.**
-> Dashboard numbers, task lists and charts are intentionally empty and labelled as
-> placeholders. Authentication and the task API are **not** implemented yet.
+> **Current status:** Core application features are implemented. Automated test
+> coverage and hosted deployment verification remain in progress.
 
 ---
 
-## Features (planned, delivered by phase)
+## Features
 
 | Area | Status |
 | --- | --- |
-| Responsive app shell: collapsible sidebar, mobile drawer, sticky header | ✅ Phase 1 |
-| Light / dark / system theme with persistence | ✅ Phase 1 |
-| Dashboard, Tasks, Today, Upcoming, Completed, Important, Calendar, Analytics, Settings routes | ✅ Phase 1 |
-| Functional month calendar (local timezone) | ✅ Phase 1 |
-| Register / login / logout with bcrypt + JWT in HttpOnly cookies | ⏳ Phase 2 |
-| SQLite schema, migrations, demo seed | ⏳ Phase 2 |
-| Task CRUD, categories, filters, sorting, ownership checks | ⏳ Phase 3–4 |
-| Live dashboard metrics, Recharts analytics | ⏳ Phase 5 |
-| Vitest + React Testing Library + Supertest suites | ⏳ Phase 6 |
-| Deployment configuration and final docs | ⏳ Phase 7 |
+| Responsive app shell, persisted light / dark / system themes | ✅ |
+| Register, login, logout, protected routes, HttpOnly cookie sessions | ✅ |
+| SQLite schema, migrations, demo seed | ✅ |
+| Task CRUD, categories, filtering, sorting, ownership checks | ✅ |
+| Dashboard metrics, completion charts, priority distribution | ✅ |
+| Calendar, task views, analytics, settings | ✅ |
+| Automated frontend and backend test suites | ⏳ |
+| Production deployment configuration | ✅ Railway / Docker |
 
 ## Tech stack
 
@@ -45,7 +42,7 @@ taskflow/
 │     │  ├─ layout/        # Sidebar, Header, AppLayout, PageContainer, AuthLayout
 │     │  ├─ tasks/         # PriorityBadge, StatusBadge, CategoryBadge, FilterBar
 │     │  └─ ui/            # Button, Field, Select, StatCard, ThemeToggle, …
-│     ├─ context/          # ThemeContext (auth context lands in Phase 2)
+│     ├─ context/          # Auth, tasks, theme and toast providers
 │     ├─ pages/            # Dashboard, Tasks, Calendar, Analytics, Settings, auth
 │     ├─ utils/            # cn, navigation, timezone-safe date helpers
 │     ├─ App.jsx
@@ -57,6 +54,7 @@ taskflow/
 │     ├─ config/env.js     # Loads the repo-root .env
 │     └─ server.js         # HTTP entry point
 ├─ .env.example
+├─ Dockerfile              # Production image for Railway or Docker
 └─ README.md
 ```
 
@@ -111,18 +109,15 @@ The server reads `PORT`, `CLIENT_ORIGIN`, `JWT_SECRET`, `JWT_EXPIRES_IN`,
 
 Never commit `.env` — it is ignored by git.
 
-## Phase 1 manual test checklist
+## Manual checks
 
 1. `npm run dev` starts both processes without errors.
-2. `/` redirects to `/dashboard`; greeting and date match your local timezone.
-3. Collapse the sidebar with the bottom button, reload, and confirm it stays collapsed.
-4. Resize below 1024px: sidebar becomes a drawer, Escape and the overlay both close it.
-5. Toggle the theme in the header; reload and confirm the choice persists.
-6. In Settings choose Light / System / Dark and confirm the whole UI follows.
-7. On Calendar, step through months and click dates; today is highlighted.
-8. Unknown URLs (e.g. `/does-not-exist`) render the 404 page.
-9. `curl http://localhost:5000/api/health` returns `{"data":{"status":"ok",…}}`.
-10. Every placeholder is visibly labelled with its phase — no invented numbers.
+2. Register and sign in; confirm the session survives a page reload.
+3. Create, edit, complete and delete a task; verify the dashboard updates.
+4. Confirm analytics reflect actual tasks and show zero-data states when empty.
+5. On Calendar, step through months and click dates; today is highlighted.
+6. Unknown URLs render the 404 page.
+7. `curl http://localhost:5000/api/health` returns `{"data":{"status":"ok",…}}`.
 
 ## Build
 
@@ -132,14 +127,39 @@ npm run build
 
 Production output is written to `client/dist/`.
 
-## Roadmap
+## Deploy to Railway
 
-1. **Phase 2** — SQLite schema + migrations, seed script, register/login/logout, JWT in HttpOnly cookies, protected routes.
-2. **Phase 3** — Tasks, categories and analytics REST endpoints with validation, pagination and ownership checks.
-3. **Phase 4** — Connect the UI to the API: CRUD, filters, search, Kanban, toasts and confirmations.
-4. **Phase 5** — Live dashboard metrics, Recharts analytics, calendar markers, profile/password settings.
-5. **Phase 6** — Vitest/RTL/Supertest suites, accessibility pass, bug fixes.
-6. **Phase 7** — Final README (screenshots, API reference, deployment), release checklist.
+The root `Dockerfile` builds the React client and serves it from Express alongside
+the API. This keeps requests and the HttpOnly session cookie same-origin.
+
+1. Create a Railway project and deploy the `srA12-png/Taskflow` GitHub repository.
+   Railway detects the root `Dockerfile` automatically.
+2. Attach a persistent volume to the service, mounted at `/data`.
+3. Generate a public domain for the service, then set these service variables:
+
+   | Variable | Value |
+   | --- | --- |
+   | `NODE_ENV` | `production` |
+   | `JWT_SECRET` | A unique random secret of at least 32 random bytes |
+   | `JWT_EXPIRES_IN` | `7d` |
+   | `DATABASE_FILE` | `/data/taskflow.db` |
+   | `COOKIE_SECURE` | `true` |
+   | `CLIENT_ORIGIN` | The exact HTTPS origin Railway assigned to the service |
+
+   Railway supplies `PORT` automatically; do not set it to a fixed value.
+4. Redeploy after setting the variables. Open
+   `https://<your-domain>/api/health`, confirm it reports `status: "ok"`, and
+   register an account in the app.
+
+The persistent volume is required because the container filesystem is replaced
+on redeploy. Without it, SQLite data is lost. Never use the development JWT
+secret in production. The optional demo seed is intended for local development,
+not public production deployments.
+
+## Remaining work
+
+- Add and run frontend and backend automated test suites.
+- Complete a hosted deployment and verify production registration, login and task CRUD.
 
 ## License
 

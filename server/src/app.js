@@ -1,4 +1,6 @@
 import express from "express";
+import path from "node:path";
+import { fileURLToPath } from "node:url";
 import helmet from "helmet";
 import cors from "cors";
 import cookieParser from "cookie-parser";
@@ -48,6 +50,28 @@ app.use("/api/users", userRoutes);
 app.use("/api/tasks", taskRoutes);
 app.use("/api/categories", categoryRoutes);
 app.use("/api/analytics", analyticsRoutes);
+
+if (config.isProduction) {
+  const clientDist = path.resolve(
+    path.dirname(fileURLToPath(import.meta.url)),
+    "../../client/dist",
+  );
+  app.use(express.static(clientDist, { index: false }));
+  app.use((request, response, next) => {
+    if (
+      request.path === "/api" ||
+      request.path.startsWith("/api/") ||
+      request.method !== "GET" ||
+      !request.accepts("html")
+    ) {
+      return next();
+    }
+
+    response.sendFile(path.join(clientDist, "index.html"), (error) => {
+      if (error) next(error);
+    });
+  });
+}
 
 app.use(notFoundHandler);
 app.use(errorHandler);

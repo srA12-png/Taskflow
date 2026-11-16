@@ -1,0 +1,13 @@
+.git
+.env
+.env.*
+**/.env
+**/.env.*
+**/node_modules
+**/dist
+**/coverage
+server/data
+*.db
+*.db-shm
+*.db-wal
+*.log
