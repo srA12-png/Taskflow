@@ -82,16 +82,7 @@ npm --prefix client install
 npm --prefix server install
 ```
 
-## Running locally
-
-Run both the API and the frontend with one command:
-
-```bash
-npm run dev
-```
-
-- Frontend: <http://localhost:5173>
-- API health check: <http://localhost:5000/api/health>
+Deploy link: https://taskflow-demo-siva.onrender.com
 
 Separate terminals:
 
